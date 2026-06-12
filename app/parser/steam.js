@@ -680,12 +680,20 @@ function GetMissingData(data) {
       data.img.icon = data.img.icon || updatedImgs.icon;
     }
     if (data.achievement.list.some((ac) => !ac.description || ac.description === '')) {
-      updated = true;
-      const missing = data.achievement.list.filter((ac) => !ac.description || ac.description === '');
       updatedDesc = ipcRenderer.sendSync('get-steam-data', { appid: data.appid, type: 'steamhunters' });
-      const map = new Map(updatedDesc.achievements.map((item) => [item.name, item.description]));
-      for (let ach of data.achievement.list) {
-        if (!ach.description && (map.has(ach.displayName) || map.has(ach.name))) ach.description = map.get(ach.displayName) || map.get(ach.name);
+      // FIX (fork): guard against an empty/failed steamhunters response. The
+      // Steam schema legitimately leaves descriptions blank for HIDDEN achievements,
+      // so this branch runs for many games; when steamhunters has no data for an
+      // obscure title it returned undefined and `updatedDesc.achievements.map(...)`
+      // threw "Cannot read property 'map' of undefined" -- which aborted the whole
+      // game load and made the game vanish from the list. Now we skip cleanly.
+      const supplemental = updatedDesc && Array.isArray(updatedDesc.achievements) ? updatedDesc.achievements : [];
+      if (supplemental.length) {
+        updated = true;
+        const map = new Map(supplemental.map((item) => [item.name, item.description]));
+        for (let ach of data.achievement.list) {
+          if (!ach.description && (map.has(ach.displayName) || map.has(ach.name))) ach.description = map.get(ach.displayName) || map.get(ach.name);
+        }
       }
     }
   } catch (e) {

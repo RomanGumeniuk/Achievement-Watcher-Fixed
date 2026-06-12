@@ -59,6 +59,16 @@ it fetches the real schema from Steam and writes a correct `achievements.json`
 > save format correctly — that part was never broken. The problem is upstream of
 > it, in the emulator's own schema file.
 
+### Fix 3 — games with hidden achievements crash out of the list (fixed in source)
+
+`GetMissingData()` in `app/parser/steam.js` tried to enrich blank descriptions
+(which the Steam schema legitimately leaves empty for **hidden** achievements) via
+a "steamhunters" lookup, then called `.map()` on the response without checking it.
+For obscure titles that lookup returns nothing, so `.map of undefined` threw and
+**aborted the game's load — it vanished from the list** despite a valid schema and
+save. Now the supplemental response is guarded. (Hit this on ZERO PARADES: 42/55
+achievements have blank descriptions.) See [FIXES.md](FIXES.md#fix-3).
+
 ## Quick start (so you don't hit these problems)
 
 1. **Install** this build (see *Building* below) or the upstream app.

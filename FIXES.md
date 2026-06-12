@@ -94,6 +94,35 @@ show in the tracker.
 
 ---
 
+## Fix 3 — crash in `GetMissingData` makes games with hidden achievements vanish
+
+**File:** `app/parser/steam.js`, in `GetMissingData()`.
+
+The Steam schema (`GetSchemaForGame`) legitimately returns **blank descriptions for
+hidden achievements**. To fill them, AW does a supplemental "steamhunters" lookup
+and maps over the response:
+
+```js
+updatedDesc = ipcRenderer.sendSync('get-steam-data', { appid: data.appid, type: 'steamhunters' });
+const map = new Map(updatedDesc.achievements.map((item) => [item.name, item.description]));
+```
+
+For an obscure title, steamhunters has no entry and the call returns `undefined`,
+so `updatedDesc.achievements.map(...)` throws `TypeError: Cannot read property
+'map' of undefined`. In the released build this aborts `getGameData()` for that
+appid, so the game **silently disappears from the list** on every scan — even
+though its schema and save file are perfectly fine.
+
+This bites any game with ≥1 hidden achievement that steamhunters doesn't cover.
+Concrete repro: **ZERO PARADES: For Dead Spies** (appid 2863680) has 42 of 55
+achievements with blank descriptions; before the fix it failed to load (~31s then
+crash), after it loads in ~0.01s.
+
+**Fixed:** guard the supplemental response — only build the map when
+`updatedDesc.achievements` is actually an array with entries; otherwise skip
+cleanly (and don't flag the cache as needing a rewrite). See the `FIX (fork)`
+comment in `GetMissingData`.
+
 ## What was checked but is NOT broken
 
 - **gbe_fork save format.** Achievement Watcher's parser already maps
