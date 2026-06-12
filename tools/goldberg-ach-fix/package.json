@@ -1,0 +1,27 @@
+{
+  "name": "goldberg-ach-fix",
+  "version": "1.0.0",
+  "description": "Make Goldberg/gbe_fork Steam-emulator achievements actually work: generate a correct steam_settings/achievements.json with real API names + icons, recover Achievement Watcher, and get live unlock notifications.",
+  "bin": {
+    "achfix": "bin/achfix.js"
+  },
+  "type": "commonjs",
+  "scripts": {
+    "fix": "node bin/achfix.js fix",
+    "watch": "node bin/achfix.js watch",
+    "list": "node bin/achfix.js list"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "steam",
+    "achievements",
+    "goldberg",
+    "gbe_fork",
+    "achievement-watcher",
+    "emulator"
+  ],
+  "license": "MIT",
+  "dependencies": {}
+}

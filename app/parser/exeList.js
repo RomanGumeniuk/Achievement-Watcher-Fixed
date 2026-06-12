@@ -1,0 +1,60 @@
+'use strict';
+
+const remote = require('@electron/remote');
+const path = require('path');
+const fs = require('fs');
+
+const file = path.join(remote.app.getPath('userData'), 'cfg/exeList.db');
+
+async function getCurrentList() {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      await module.exports.save([]);
+      return [];
+    } else {
+      throw err;
+    }
+  }
+}
+
+module.exports.get = async (appid) => {
+  let defaultCfg = { appid, exe: '', args: '' };
+  try {
+    let defaultCfg = { appid, exe: '', args: '' };
+    let currentList = await getCurrentList();
+    let found = currentList.find((app) => app.appid === appid);
+    return found ? found : defaultCfg;
+  } catch (err) {
+    debug.log(err);
+    return defaultCfg;
+  }
+};
+
+module.exports.save = async (data) => {
+  try {
+    fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {
+    debug.log(err);
+  }
+};
+
+module.exports.add = async (app) => {
+  try {
+    debug.log(`Adding ${app.appid} to exeList ...`);
+    let currentList = await getCurrentList();
+    let existingEntry = currentList.find((ap) => ap.appid === app.appid);
+    if (existingEntry) {
+      existingEntry.exe = app.exe;
+      existingEntry.args = app.args;
+      debug.log(`${app.appid} already on the list, updating path and launch args ...`);
+    } else {
+      currentList.push(app);
+    }
+    await this.save(currentList);
+    debug.log('Done.');
+  } catch (err) {
+    debug.log(err);
+  }
+};

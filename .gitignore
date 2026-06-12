@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/output/
+*.log
+*.bak
+*.bak-*
+.DS_Store
+Thumbs.db
+
+# upstream heavy artifacts we intentionally do not vendor
+/node/
+/nw/
+/setup/redist/
+/setup/rcedit/
+*.exe
+*.nupkg
+*.7z
